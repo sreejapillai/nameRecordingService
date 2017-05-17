@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- Points to configuration file on disk, takes higher precedence over explicit 
+	definition of service addresses and refresh interval -->
+<!-- <appnAccessConfig path="/export/file_area/resourceConfig/appnAccessWSConfig.xml" 
+	/> -->
+
+<!-- Service addresses of Appn Access WS and refresh interval for configuration -->
+<appnAccessConfig>
+	<!-- CEE instance -->
+	<serviceAddress>http://rana3-stage.hbs.edu:8234/appnAccessWS/services/</serviceAddress>
+	<refreshInterval>30</refreshInterval>
+</appnAccessConfig>

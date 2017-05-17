@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="hbs.schoolwide.nameRecordingService.mapper.ReportMapper">
+
+    <select id="getStudentList" resultType="hbs.schoolwide.nameRecordingService.dto.StudentDTO">
+        select s.prsn_id as personId,
+        s.hu_id as huId,
+        s.pref_first_name as firstName,
+        s.pref_middle_name as middleName,
+        s.pref_last_name as lastName,
+        s.gender as gender,
+        s.stu_stat_type_code as studentStatus,
+        s.student_email as email,
+        s.section as classSection,
+        to_char(s.estimated_graduation_date,'MM/DD/YYYY') as estimatedGradDate,
+        DECODE(s.year,1,'RC',2,'EC') as studentType,
+        c.CNTRY_TYPE_DESC as countryOfOrigin,
+        nrs.note as recordingNote
+        from BV_GRAD_MBA_PROSPECTIVE s
+        JOIN entmgr.bt_cntry_type c on s.CNTRY_TYPE_CODE = c.CNTRY_TYPE_CODE
+        LEFT JOIN ENTMGR.NAME_RECORDING_NOTE nrs on nrs.PERSON_ID = s.prsn_id
+        where s.year = 2
+        and s.stu_stat_type_code = 'ST'
+        and EXTRACT( YEAR FROM s.estimated_graduation_date) = EXTRACT(YEAR FROM sysdate)
+        order by s.section, s.pref_last_name, s.pref_first_name
+    </select>
+
+    <select id="getStudentRecord" parameterType="Long" resultType="hbs.schoolwide.nameRecordingService.dto.StudentDTO">
+        select s.prsn_id as personId,
+        s.hu_id as huId,
+        s.pref_first_name as firstName,
+        s.pref_middle_name as middleName,
+        s.pref_last_name as lastName,
+        s.gender as gender,
+        s.stu_stat_type_code as studentStatus,
+        s.student_email as email,
+        s.section as classSection,
+        to_char(s.estimated_graduation_date,'MM/DD/YYYY') as estimatedGradDate,
+        DECODE(s.year,1,'RC',2,'EC') as studentType,
+        c.CNTRY_TYPE_DESC as countryOfOrigin,
+        nrs.note as recordingNote
+        from BV_GRAD_MBA_PROSPECTIVE s
+        JOIN entmgr.bt_cntry_type c on s.CNTRY_TYPE_CODE = c.CNTRY_TYPE_CODE
+        LEFT JOIN ENTMGR.NAME_RECORDING_NOTE nrs on nrs.PERSON_ID = s.prsn_id
+        where s.year = 2
+        and s.stu_stat_type_code = 'ST'
+        and s.prsn_id = #{value}
+    </select>
+
+
+    <update id="mergeIntoNameRecordingNote" parameterType="Map">
+        merge into ENTMGR.NAME_RECORDING_NOTE nrn
+        using (select #{personId, jdbcType=BIGINT} as personId, #{note, jdbcType=VARCHAR} as note from dual) nrn1
+        on (nrn.person_id = nrn1.personId)
+        when matched then
+        update set nrn.NOTE = #{note, jdbcType=VARCHAR}
+        when not matched then
+        insert (nrn.PERSON_ID, nrn.NOTE)
+        values (#{personId, jdbcType=BIGINT}, #{note, jdbcType=VARCHAR})
+    </update>
+
+</mapper>

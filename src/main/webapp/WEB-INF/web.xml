@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://java.sun.com/xml/ns/javaee"
+         xmlns:web="http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd"
+         xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd"
+         id="lmsTools" version="2.5">
+
+    <display-name>nameRecordingService</display-name>
+
+    <context-param>
+        <param-name>contextClass</param-name>
+        <param-value>org.springframework.web.context.support.AnnotationConfigWebApplicationContext</param-value>
+    </context-param>
+
+    <context-param>
+        <param-name>contextConfigLocation</param-name>
+        <param-value>hbs.schoolwide.nameRecordingService.config.Config</param-value>
+    </context-param>
+
+    <listener>
+        <listener-class>org.springframework.web.context.ContextLoaderListener</listener-class>
+    </listener>
+
+    <filter>
+        <filter-name>OAMSessionReconciliationFilter</filter-name>
+        <filter-class>hbs.common.appnaccess.web.OAMSessionReconciliationFilter</filter-class>
+        <init-param>
+            <param-name>exclusionExpression</param-name>
+            <param-value>.gif|.jpg|.css|/api/</param-value>
+        </init-param>
+        <init-param>
+            <param-name>hbsAppnTypeCode</param-name>
+            <param-value>HBSW,NREC</param-value>
+        </init-param>
+        <init-param>
+            <param-name>hbsDelegates</param-name>
+            <param-value>hbs.common.appnaccess.web.LoggingContextFilterChainDelegate</param-value>
+        </init-param>
+    </filter>
+
+    <filter>
+        <filter-name>AdministratorAccessFilter</filter-name>
+        <filter-class>hbs.common.appnaccess.web.AppnAccessControlFilter</filter-class>
+        <init-param>
+            <param-name>hbsAppnTypeCode</param-name>
+            <param-value>NREC</param-value>
+        </init-param>
+        <init-param>
+            <param-name>hbsAppnAccessRole</param-name>
+            <param-value>ADMN</param-value>
+        </init-param>
+        <init-param>
+            <param-name>localRedirectTarget</param-name>
+            <param-value>/common/accessDenied.jsp</param-value>
+        </init-param>
+    </filter>
+
+    <filter>
+        <filter-name>StudentAccessFilter</filter-name>
+        <filter-class>hbs.common.appnaccess.web.AppnAccessControlFilter</filter-class>
+        <init-param>
+            <param-name>hbsAppnTypeCode</param-name>
+            <param-value>NREC</param-value>
+        </init-param>
+        <init-param>
+            <param-name>hbsAppnAccessRole</param-name>
+            <param-value>STUDENT</param-value>
+        </init-param>
+        <init-param>
+            <param-name>localRedirectTarget</param-name>
+            <param-value>/common/accessDenied.jsp</param-value>
+        </init-param>
+    </filter>
+
+    <filter>
+        <filter-name>SysAccessControlFilter</filter-name>
+        <filter-class>hbs.common.appnaccess.web.AppnAccessControlFilter</filter-class>
+        <init-param>
+            <param-name>exclusionExpression</param-name>
+            <param-value>.js$|.gif|.jpg|.css|images/|common/</param-value>
+        </init-param>
+        <init-param>
+            <param-name>hbsAppnTypeCode</param-name>
+            <param-value>HBSW</param-value>
+        </init-param>
+        <init-param>
+            <param-name>hbsAppnAccessRole</param-name>
+            <param-value>ITG</param-value>
+        </init-param>
+        <init-param>
+            <param-name>localRedirectTarget</param-name>
+            <param-value>/common/accessDenied.jsp</param-value>
+        </init-param>
+    </filter>
+
+    <filter-mapping>
+        <filter-name>OAMSessionReconciliationFilter</filter-name>
+        <url-pattern>/*</url-pattern>
+    </filter-mapping>
+
+    <filter-mapping>
+        <filter-name>AdministratorAccessFilter</filter-name>
+        <url-pattern>/svc/report/*</url-pattern>
+    </filter-mapping>
+
+    <filter-mapping>
+        <filter-name>StudentAccessFilter</filter-name>
+        <url-pattern>/svc/student/*</url-pattern>
+    </filter-mapping>
+
+    <filter-mapping>
+        <filter-name>SysAccessControlFilter</filter-name>
+        <url-pattern>/sys/*</url-pattern>
+    </filter-mapping>
+
+    <servlet>
+        <servlet-name>nameRecordingService</servlet-name>
+        <servlet-class>org.springframework.web.servlet.DispatcherServlet</servlet-class>
+        <load-on-startup>1</load-on-startup>
+    </servlet>
+
+    <servlet-mapping>
+        <servlet-name>nameRecordingService</servlet-name>
+        <url-pattern>/svc/*</url-pattern>
+    </servlet-mapping>
+
+    <resource-ref>
+        <res-ref-name>jdbc/nameRecord</res-ref-name>
+        <res-type>javax.sql.DataSource</res-type>
+        <res-auth>Container</res-auth>
+    </resource-ref>
+
+</web-app>

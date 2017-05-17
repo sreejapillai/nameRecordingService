@@ -1,0 +1,158 @@
+group 'hbs'
+version '1.0-SNAPSHOT'
+
+apply plugin: 'java'
+apply plugin: "war"
+
+sourceCompatibility = 1.6
+
+loadConfig()
+
+repositories {
+    mavenLocal()
+    mavenCentral()
+    maven { url 'http://repo.spring.io/libs-release' }
+    maven { url 'http://rhitdev1.hbs.edu:8081/maven-repo/' }
+}
+
+war {
+    ant.echoproperties(destfile: "$rootDir/src/main/webapp/sys/build-properties.txt")
+    baseName = "nameRecordingService-$env"
+    version = "$project.tag".toString()
+    archiveName = "${baseName}.war"
+    manifest {
+        attributes 'Weblogic-Application-Version': version,
+                'Built-By': System.getProperty('user.name'),
+                'Built-Date': new Date(),
+                'Built-JDK': System.getProperty('java.version')
+    }
+}
+
+// The following creates a directory with the exploded war. This is useful
+// for debugging war contents and for local/dev tomcat/weblogic deploys
+task explodedWar(type: Copy) {
+    into "$buildDir/exploded"
+    with war
+}
+war.dependsOn explodedWar
+
+
+// Richard uses: gradlew packageWar -Penv=prod -Ptag=${prod.tag.number}
+// packageWar is only called by Richard for production builds.
+// Richard's process always includes doing a fresh checkout of the production tag.
+// Therefore, production builds don't need to 'callWarInCheckedOutDir'
+task packageWar (dependsOn:['war'] ){
+}
+
+/**
+ * Performs build-time substitutions and pushes the generated files
+ * into the classpath
+ */
+task processEnvResources(type: Copy) {
+    from("src/env/${env}/resources") {
+        filter {
+            it.replaceAll('@@tag@@', "${tag}")
+        }
+    }
+
+    into("build/tmp/resources")
+}
+explodedWar.dependsOn processEnvResources
+
+task zipConfigFiles(type: Zip) {
+    def target = {
+        def t = "schoolwide/nameRecordingService"
+        if ("${env}".toString() == "cee") t += "-CEE"
+        t + "/${tag}"
+    }
+    from(['src/file_area/schoolwide/nameRecordingService', "properties/${env}"]) {
+        // Filter: substitute tag and, when appropriate, "-CEE" path
+        filter {String line ->
+            line.replaceAll('@@tag@@', "${tag}")
+                    .replaceAll('@@cee@@', {
+                if ("$env".toString() == 'cee') "-CEE"
+                else ""
+            })
+        }
+    }
+
+    into(target)
+    archiveName "nameRecordingService.file_area-${tag}.zip"
+    destinationDir file('build/libs')
+}
+
+task packageLibs {
+    dependsOn([war, zipConfigFiles])
+    doLast {
+        println "Generated artifacts"
+        File libsDir = file("${buildDir}/libs")
+        FileCollection collection = files { libsDir.listFiles() }
+        collection.collect { relativePath(it) }.sort().each { println it }
+    }
+}
+
+/**
+ * Dump-point for environment-specific config files generated at
+ * build time.
+ */
+sourceSets {
+
+    main {
+        compileClasspath += files("build/tmp/resources")
+        runtimeClasspath += files("build/tmp/resources")
+    }
+
+    test {
+        compileClasspath += files("build/tmp/resources")
+        runtimeClasspath += files("build/tmp/resources")
+    }
+}
+
+dependencies {
+    compile 'com.fasterxml.jackson.core:jackson-annotations:2.5.3'
+    compile 'com.fasterxml.jackson.core:jackson-core:2.5.3'
+    compile 'com.fasterxml.jackson.core:jackson-databind:2.5.3'
+    compile 'commons-fileupload:commons-fileupload:1.3.1'
+
+    compile 'javax.servlet:servlet-api:2.5'
+    compile 'javax.servlet:jstl:1.2'
+
+    compile 'hbs.infrastructure.appnAccess:hbsAppnAccessWebServiceClientSpring:1.1.2'
+    compile 'hbs.infrastructure.common:hbsCommonConfiguration:1.4.1-b02'
+
+    compile 'log4j:log4j:1.2.17'
+
+    compile 'org.slf4j:slf4j-api:1.7.6'
+    compile 'org.slf4j:jcl-over-slf4j:1.7.6'
+    compile 'org.slf4j:jul-to-slf4j:1.7.6'
+    compile 'org.slf4j:slf4j-log4j12:1.7.6'
+
+    compile 'org.mybatis:mybatis:3.2.8'
+    compile 'org.mybatis:mybatis-spring:1.2.3'
+
+    compile 'org.springframework:spring-beans:4.1.6.RELEASE'
+    compile 'org.springframework:spring-context:4.1.6.RELEASE'
+    compile 'org.springframework:spring-context-support:4.1.6.RELEASE'
+    compile 'org.springframework:spring-core:4.1.6.RELEASE'
+    compile 'org.springframework:spring-webmvc:4.1.6.RELEASE'
+    compile 'org.springframework:spring-tx:4.1.6.RELEASE'
+    compile 'org.springframework:spring-jdbc:4.1.6.RELEASE'
+    compile 'org.springframework:spring-web:4.1.6.RELEASE'
+    compile 'org.springframework.security:spring-security-web:4.1.3.RELEASE'
+    compile 'org.springframework.security:spring-security-config:4.1.3.RELEASE'
+
+    testCompile group: 'junit', name: 'junit', version: '4.11'
+}
+
+def loadConfig() {
+    println "Starting config"
+    println "Build dir is $buildDir"
+    // env property
+    def env = project.hasProperty('env') ? env : 'dev'
+    println("env: " + env)
+
+    def tag = project.hasProperty('tag') ? tag : 'trunk'
+
+    setProperty 'env', env
+    setProperty 'tag', tag
+}

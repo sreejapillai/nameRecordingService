@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<weblogic-web-app xmlns="http://www.bea.com/ns/weblogic/weblogic-web-app"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.bea.com/ns/weblogic/weblogic-web-app
+    http://www.oracle.com/technology/weblogic/10.3/weblogic-web-app/1.0/weblogic-web-app.xsd">
+
+	<resource-description>
+		<res-ref-name>jdbc/nameRecord</res-ref-name>
+		<jndi-name>jdbc/nameRecord</jndi-name>
+	</resource-description>
+	<session-descriptor>
+		<timeout-secs>3600</timeout-secs>
+		<!-- Sets the session tracking cookie path. -->
+		<cookie-path>/nameRecordingService</cookie-path>
+		<!-- disables URL rewriting, which encodes the session ID into the URL -->
+		<url-rewriting-enabled>false</url-rewriting-enabled>
+		<persistent-store-type>replicated_if_clustered</persistent-store-type>
+	</session-descriptor>
+
+	<container-descriptor>
+	</container-descriptor>
+
+	<jsp-descriptor>
+		<keepgenerated>true</keepgenerated>
+		<working-dir>pageCompile/nameRecordingService</working-dir>
+		<backward-compatible>true</backward-compatible>
+	</jsp-descriptor>
+
+	<context-root>/nameRecordingService</context-root>
+
+
+</weblogic-web-app>
